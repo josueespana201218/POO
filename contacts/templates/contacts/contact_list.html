@@ -2,51 +2,70 @@
 {% load static %}
 {% block content %}
 
-
     <div class="mt-5">
         <h3>Mis Contactos</h3>
 
-      
         <div class="text-end">
-           <form action="">
-                <imput type="text" class="form-control" placeholder="buscar por nombre" style="max-width: 200px;">
+           <form method="get" action="" class="d-inline-block me-2">
+                <div class="input-group">
+                    <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="buscar por nombre, email o teléfono" style="max-width: 300px;">
+                    <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+                    {% if q %}
+                        <a href="{% url 'contact_list' %}" class="btn btn-outline-secondary">Limpiar</a>
+                    {% endif %}
+                </div>
             </form>
             <a href="{% url 'contact_new' %}" class="btn btn-outline-primary">
                 Registrar Contacto
             </a>
         </div>
-
-
     </div>
 
    <div class="table-responsive">
      <table class="mt-5 table table-hover">
-        <tread>
+        <thead>
             <tr>
                 <th>Nombres</th>
                 <th>F. Nacimiento</th>
                 <th>Celular</th>
                 <th>F. Registro</th>
+                <th>Favorito</th>
                 <th></th>
             </tr>
-        </tread>
+        </thead>
         <tbody>
             {% for contact in object_list %}
                 <tr>
                     <td> 
+                         <div class="d-flex align-items-center gap-2">
                         {% if contact.avatar %}
-                        <img scr="{{ contact.avatar.url }}" alt="" class="rounded" style="max-width: 64px;">
+                        <img src="{{ contact.avatar.url }}" alt="{{ contact.name }}" class="rounded" style="width:64px; height:64px; object-fit:cover;">
+                        {% else %}
+                        <svg width="64" height="64" class="rounded" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sin imagen" style="background:#e9ecef;">
+                            <rect width="100%" height="100%" fill="#e9ecef" />
+                            <text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#6c757d" font-size="20">{{ contact.name|slice:":1"|upper }}</text>
+                        </svg>
                         {% endif %}
                         <div>
                             <div class="fw-bold">{{ contact.name }}</div>
                             <div>{{ contact.email }}</div>
                         </div>
+                    </div>
                     </td>
                     <td>{{ contact.birth|default:'-' }}</td>
                     <td>{{ contact.phone|default:'-' }}</td>
                     <td>{{ contact.created|date:'d/m/Y h:i A' }}</td>
                     <td>
-                        <div class="btn-group btn-group-sn">
+                        <a href="{% url 'contact_toggle_favorite' contact.pk %}" class="btn btn-sm {% if contact.favorito %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                            {% if contact.favorito %}
+                                ★ Favorito
+                            {% else %}
+                                ☆ Agregar
+                            {% endif %}
+                        </a>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
                             <a href="{% url 'contact_edit' contact.pk %}" class="btn btn-primary">Editar</a>
                             <a href="{% url 'contact_delete' contact.pk %}" class="btn btn-danger">Eliminar</a>
                         </div>
@@ -56,7 +75,6 @@
         </tbody>
     </table>
    </div>
-
 
     <div class="text-end mb-5">
         {{ page_obj.paginator.count }} resultado {{ page_obj.paginator.count|pluralize }}
@@ -71,51 +89,37 @@
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="{% url 'contact_list' %}?page={{ page_obj.previous_page_number }}"
+                    <a class="page-link" href="{% url 'contact_list' %}?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
                     aria-label="Anterior">
-                        <span aria-hidden="true">
-                            <<
-                        </span>
+                        <span aria-hidden="true"><<</span>
                     </a>
                 </li>
-            {% else %}
+                {% else %}
                 <li class="page-item disabled">
                     <a class="page-link" href="#" aria-label="Anterior">
-                        <span aria-hidden="true">
-                            <<
-                        </span>
+                        <span aria-hidden="true"><<</span>
                     </a>
                 </li>
-                
-            {% endif %}
+                {% endif %}
 
-            {% for page in page_obj.adjusted_elided_pages %}
+                {% for page in page_obj.adjusted_elided_pages %}
                 <li class="page-item {% if page_obj.number == page %} active {% endif %}">
-                    <a class="page-link" href="{% url 'contact_list' %}? page={{ page }}">
+                    <a class="page-link" href="{% url 'contact_list' %}?page={{ page }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
                         {{ page }}
                     </a>
                 </li>
+                {% endfor %}
 
-            {% endfor %}
-
-            {% if page_obj.hast_next %}
-            <li class="page-item">
-                <a class="page-link" href="{% url 'contact_list' %}?page={{ page_obj.next_page_number }}"
-                aria-label="Siguiente">
-                    <span aria-hidden="true">
-                        >>
-                    </span>
-                </a>
-            </li>
-            {% endif %}
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{% url 'contact_list' %}?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+                    aria-label="Siguiente">
+                        <span aria-hidden="true">>></span>
+                    </a>
+                </li>
+                {% endif %}
             </ul>
-
-
         </nav>
-
-
-
-
     </div>
 
 {% endblock content %}
